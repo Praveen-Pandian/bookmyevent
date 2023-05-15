@@ -37,7 +37,7 @@ try {
 
     app.post("/api/checkDate", async (req, res) => {
         const { date, session } = req.body;
-        const result = await eventModel.find({ date, $not: { venue: ['DEPARTMENT', 'BLOCK-1', 'BLOCK-2', 'BLOCK-3', 'BLOCK-4', 'BLOCK-5'] } });
+	const result = await eventModel.find({ date, venue: { $nin: ['DEPARTMENT**', 'BLOCK-1**', 'BLOCK-2**', 'BLOCK-3**', 'BLOCK-4**', 'BLOCK-5**', 'OTHERS**']}});
         let blocked = [];
         if (session === "Full Day") {
             for (let item of result) {
@@ -65,43 +65,45 @@ try {
 
     app.post("/api/addEvent", async (req, res) => {
         const { date,
-            audience,
-            venue,
-            event,
-            description,
-            start,
-            end,
-            link,
-            session,
-            club,
-            dept,
-            image,
-            allowed
-        } = req.body;
+        audience,
+        venue,
+        event,
+        description,
+        start,
+        end,
+        link,
+        session,
+        club,
+        dept,
+        image,
+        allowed,
+        venueName
+    } = req.body;
 
-        const status = venue != 'DEPARTMENT' ? await serverCheck(date, venue, session) : true;
-        if (status === true) {
-            await eventModel.insertMany([
-                {
-                    date: new Date(date),
-                    audience,
-                    venue,
-                    event,
-                    description,
-                    startTime: start,
-                    endTime: end,
-                    session,
-                    link,
-                    club: club && club,
-                    department: dept && dept,
-                    image,
-                    target: allowed
-                }
-            ])
-            res.json({ status: "Success" })
-        }
-        else
-            res.json({ status: "OOPS Slot has been allocated" })
+    const status = venue.includes(['DEPARTMENT', 'BLOCK-1**','BLOCK-2**','BLOCK-3**','BLOCK-4**','BLOCK-5**', 'OTHERS**']) ? true : await serverCheck(date, venue, session);
+    if (status === true) {
+        await eventModel.insertMany([
+            {
+                date: new Date(date),
+                audience,
+                venue,
+                event,
+                description,
+                startTime: start,
+                endTime: end,
+                session,
+                link,
+                club: club && club,
+                department: dept && dept,
+                image,
+                target: allowed,
+                venueName
+            }
+        ])
+        res.json({ status: "Success" })
+    }
+    else
+        res.json({ status: "OOPS Slot has been allocated" })
     })
 
     //Retrieve User
@@ -116,7 +118,9 @@ try {
 
     app.post("/api/createUser", async (req, res) => {
         try {
-            const { password, email, name, type } = req.body;
+            let { password, email, name, type } = req.body;
+	    email = email.trim();
+	    name = name.trim();
             const acc = await auth.createUser({
                 email,
                 password
@@ -199,18 +203,18 @@ try {
 
     app.post("/api/updateEvent", async (req, res) => {
         const { event } = req.body;
-        let id = event._id;
-        const status = await serverCheck(event.date, event.venue, event.session, id);
-        delete event._id;
-        if (status) {
-            await eventModel.updateOne({ _id: id }, { $set: event }, [{ new: true }]);
-            res.json({ status: "Success" })
-        }
-        else {
-            res.json({
-                status: "OOPS Slot has been booked"
-            })
-        }
+    	let id = event._id;
+        const status = venue.includes(['DEPARTMENT', 'BLOCK-1**','BLOCK-2**','BLOCK-3**','BLOCK-4**','BLOCK-5**', 'OTHERS**']) ? true : await serverCheck(event.date, event.venue, event.session, id);
+     	delete event._id;
+    	if (status) {
+        	await eventModel.updateOne({ _id: id }, { $set: event }, [{ new: true }]);
+        	res.json({ status: "Success" })
+    	}
+    	else {
+        	res.json({
+            	status: "OOPS Slot has been booked"
+        	})
+    	}
     })
 
     // Retrieve profile
