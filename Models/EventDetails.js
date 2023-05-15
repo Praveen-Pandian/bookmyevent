@@ -13,7 +13,8 @@ const eventSchema = mongoose.Schema({
     club:String,
     department:String,
     target:String,
-    link:String
+    link:String,
+    venueName:String
 });
 
 const eventModel = mongoose.model('eventModel',eventSchema);
