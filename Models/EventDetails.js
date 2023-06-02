@@ -12,7 +12,7 @@ const eventSchema = mongoose.Schema({
     session:String,
     club:String,
     department:String,
-    target:String,
+    target:Array,
     link:String,
     venueName:String
 });
