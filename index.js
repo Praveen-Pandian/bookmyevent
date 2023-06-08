@@ -1,17 +1,17 @@
 const express = require('express');
-const nodemailer = require("nodemailer");
+require("dotenv").config();
 const firebase = require('./firebase-server');
 const { getAuth } = require('firebase-admin/auth')
 const mongoose = require('mongoose');
-const app = express();
 const path = require('path');
+const app = express();
 const cors = require('cors');
 let bodyParser = require("body-parser");
 const auth = getAuth(firebase);
 const eventModel = require('./Models/EventDetails');
 const userModel = require('./Models/UserModel');
 
-mongoose.connect(`mongodb+srv://praveen_c:praveen_atlas123@cluster0.5kqerqp.mongodb.net/eventManagement?retryWrites=true&w=majority`, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(`mongodb+srv://praveen_c:${process.env.MONGO_DB_PASSWORD}@cluster0.5kqerqp.mongodb.net/eventManagement?retryWrites=true&w=majority`, { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb', extended: true }))
@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: false }))
 app.use(express.json());
 
 async function serverCheck(date, venue, session, id) {
-    const res = await eventModel.find({ date, venue, session: { $in: ['Full Day', session] } });
+    const res = await eventModel.find({ date, venue, session: { $in: ['Full Day', session] } }); 4
     if (res.length === 0)
         return true;
     else if (String(res[0]._id) === id)
@@ -156,7 +156,7 @@ app.get("/api/getEvents", async (req, res) => {
 // Retrieve All Events
 
 app.get("/api/allEvents", async (req, res) => {
-    const event = await eventModel.find({});
+    const event = await eventModel.find({},{image:0,_id:0});
     res.json({ event });
 })
 
@@ -266,8 +266,10 @@ app.post("/api/updatePassword", async (req, res) => {
     }
 })
 
+//Stats
+
 app.get("/api/eventhistory",async(req,res)=>{
-    let events = await eventModel.find({});
+    let events = await eventModel.find({},{startTime:1,endTime:1,_id:0});
     let live = 0,upcoming = 0,past = 0;
     for(let item of events){
         if((item.startTime.getTime() <= new Date().getTime()) && (item.endTime.getTime() >= new Date().getTime()))
@@ -284,4 +286,4 @@ app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, './client/dist/index.html'))
 });
 
-app.listen(8800,()=>{})
+app.listen(8000, () => { })
