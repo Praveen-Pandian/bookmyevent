@@ -1,7 +1,7 @@
 var admin = require("firebase-admin");
 require('dotenv').config();
 
-console.log(process.env.PROJECT_ID);
+console.log(process.env.TYPE);
 
 const firebase = admin.initializeApp({
     credential: admin.credential.cert({
