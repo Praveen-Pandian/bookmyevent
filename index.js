@@ -38,7 +38,7 @@ app.post("/api/checkDate", async (req, res) => {
     let blocked = [];
     if (session === "Full Day") {
         for (let item of result) {
-            blocked.push(item.venue);
+            blocked.push([item._id, item.venue]);
         }
         res.json({
             blocked
@@ -47,10 +47,10 @@ app.post("/api/checkDate", async (req, res) => {
     else {
         for (let item of result) {
             if (item.session === 'Full Day') {
-                blocked.push(item);
+                blocked.push([item._id, item.venue]);
             }
             else if (item.session === session)
-                blocked.push(item);
+                blocked.push([item._id, item.venue]);
         }
         res.json({
             blocked
